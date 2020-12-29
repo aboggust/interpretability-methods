@@ -9,20 +9,23 @@ class InterpretabilityMethod(ABC):
     def __init__(self, model):
         """ TODO """
         self.model = model
+        self.model.eval()
     
     
     @abstractmethod
-    def get_mask(self, input_batch, smoothgrad):
+    def get_mask(self, input_instance, smoothgrad=False, target_class=None):
         """
         Returns mask of activations for the given input.
         
         Args:
-        input_batch: batched inputs as torch array to run interpretability method on.
+        input_instance: inputs as torch array to run interpretability method on.
         smoothgrad: boolean value indicating if smoothgrad should be applied.
+        target_class: None or integer indicating the target class for the input.
+            If None, then the predicted class is used as the target class.
         
         Returns:
-        A numpy array the same shape as input_batch of interpretability activations.
-        Output is not normalized or in absolute values.
+        A numpy array the same shape as input_instance of interpretability activations with respect
+        to the target class. Output is not normalized or in absolute values.
         """
         pass
     
