@@ -12,7 +12,7 @@ class VanillaGradients(InterpretabilityMethod):
         super().__init__(model)
         
     
-    def get_mask(self, input_instance, smoothgrad=False, target_class=None):
+    def get_mask(self, input_instance, target_class=None):
         """Compute vanilla gradient mask."""
         # Initialize gradient for the input
         input_instance.requires_grad_()
@@ -20,7 +20,7 @@ class VanillaGradients(InterpretabilityMethod):
             input_instance.grad.data.zero_()
 
         # Compute the gradient of the input with respect to the target class
-        output = self.model(input_instance)
+        output = self.model(input_instance.unsqueeze(0))
         if not target_class:
             target_class = output.argmax(dim=1)
         output[torch.arange(output.shape[0]), target_class].backward(retain_graph=True)
