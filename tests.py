@@ -7,6 +7,7 @@ import torchvision.models as models
 import unittest
 from unittest.mock import patch
 from vanilla_gradients import VanillaGradients
+from integrated_gradients import IntegratedGradients
 
 
 class TestInterpretabilityMethod(unittest.TestCase):
@@ -81,7 +82,7 @@ class TestVanillaGradients(unittest.TestCase):
         self.assertEqual(gradients.shape, self.input_batch.shape)
         self.assertIs(type(gradients), np.ndarray)
     
-    def test_get_mask_target_classes(self):
+    def test_get_masks_target_classes(self):
         """Test default and given values of target classes."""
         gradients_predicted_class = self.vanilla_gradients.get_masks(self.input_batch, 
                                                                      target_classes=None)
@@ -93,17 +94,17 @@ class TestVanillaGradients(unittest.TestCase):
         self.assertEqual(gradients_class_100.shape, self.input_batch.shape)
         self.assertIs(type(gradients_class_100), np.ndarray)
         
-        # Input images predicted classes are 236.
         gradients_class_236 = self.vanilla_gradients.get_masks(self.input_batch, 
                                                                target_classes=[236, 236])
         self.assertEqual(gradients_class_236.shape, self.input_batch.shape)
         self.assertIs(type(gradients_class_236), np.ndarray)
         
+        # Input images predicted classes are 236.
         self.assertFalse(np.allclose(gradients_predicted_class, gradients_class_100, atol=self.tolerace))
         self.assertTrue(np.allclose(gradients_predicted_class, gradients_class_236, atol=self.tolerace))
         self.assertFalse(np.allclose(gradients_class_100, gradients_class_236, atol=self.tolerace))
 
-    def test_get_mask_consistency(self):
+    def test_get_masks_consistency(self):
         """Tests multiple runs return the same gradients."""
         gradients_first_call= self.vanilla_gradients.get_masks(self.input_batch)
         self.assertEqual(gradients_first_call.shape, self.input_batch.shape)
@@ -114,6 +115,72 @@ class TestVanillaGradients(unittest.TestCase):
         self.assertIs(type(gradients_second_call), np.ndarray)
         
         self.assertTrue(np.allclose(gradients_first_call, gradients_second_call, atol=self.tolerace))
+        
+        
+class TestIntegratedGradients(unittest.TestCase):
+    
+    def setUp(self):
+        self.model = models.__dict__['inception_v3'](pretrained=True).cuda().eval()
+        image = np.asarray(PIL.Image.open('./doberman.png')) / 127.5 - 1.0
+        input_image = torch.from_numpy(image.transpose(2, 0, 1)).cuda().float()
+        input_image_flipped = torch.from_numpy(np.flip(image.transpose(2, 0, 1), axis=1).copy()).cuda().float()
+        self.input_batch = torch.stack([input_image, input_image_flipped])
+        self.integrated_gradients = IntegratedGradients(self.model)
+        self.tolerace = 1e-05 * 25
+    
+    def test_get_masks(self):
+        """Tests output shape and type are correct for single input."""
+        gradients = self.integrated_gradients.get_masks(self.input_batch)
+        self.assertEqual(gradients.shape, self.input_batch.shape)
+        self.assertIs(type(gradients), np.ndarray)
+    
+    def test_get_masks_target_classes(self):
+        """Test default and given values of target classes."""
+        gradients_predicted_class = self.integrated_gradients.get_masks(self.input_batch, 
+                                                                        target_classes=None)
+        self.assertEqual(gradients_predicted_class.shape, self.input_batch.shape)
+        self.assertIs(type(gradients_predicted_class), np.ndarray)
+        
+        gradients_class_100 = self.integrated_gradients.get_masks(self.input_batch, 
+                                                                  target_classes=[100, 100])
+        self.assertEqual(gradients_class_100.shape, self.input_batch.shape)
+        self.assertIs(type(gradients_class_100), np.ndarray)
+        
+        gradients_class_236 = self.integrated_gradients.get_masks(self.input_batch, 
+                                                                  target_classes=[236, 236])
+        self.assertEqual(gradients_class_236.shape, self.input_batch.shape)
+        self.assertIs(type(gradients_class_236), np.ndarray)
+        
+        # Input images predicted classes are 236.
+        self.assertFalse(np.allclose(gradients_predicted_class, gradients_class_100, atol=self.tolerace))
+        self.assertTrue(np.allclose(gradients_predicted_class, gradients_class_236, atol=self.tolerace))
+        self.assertFalse(np.allclose(gradients_class_100, gradients_class_236, atol=self.tolerace))
+
+    def test_get_masks_consistency(self):
+        """Tests multiple runs return the same gradients."""
+        gradients_first_call= self.integrated_gradients.get_masks(self.input_batch)
+        self.assertEqual(gradients_first_call.shape, self.input_batch.shape)
+        self.assertIs(type(gradients_first_call), np.ndarray)
+        
+        gradients_second_call= self.integrated_gradients.get_masks(self.input_batch)
+        self.assertEqual(gradients_second_call.shape, self.input_batch.shape)
+        self.assertIs(type(gradients_second_call), np.ndarray)
+        
+        self.assertTrue(np.allclose(gradients_first_call, gradients_second_call, atol=self.tolerace))
+        
+    def test_get_masks_num_points(self):
+        """Test number of points pararmeter."""
+        vanilla_gradients_equivalent = VanillaGradients(self.model).get_masks(self.input_batch) * self.input_batch.cpu().detach().numpy()
+        integrated_gradients_multiple_points = self.integrated_gradients.get_masks(self.input_batch)
+        
+        # Integrated gradient with a 0 baseline and alphas = [1] is equal to vanilla gradients times the input.
+        with patch('torch.linspace') as mocked_linspace:
+            mocked_linspace.return_value = torch.ones((1,)) # Remove noise to check equality.
+            integrated_gradients_one_point = self.integrated_gradients.get_masks(self.input_batch, num_points=1)
+        
+        self.assertTrue(np.allclose(vanilla_gradients_equivalent, integrated_gradients_one_point, atol=self.tolerace))
+        self.assertFalse(np.allclose(vanilla_gradients_equivalent, integrated_gradients_multiple_points, atol=self.tolerace))
+        self.assertFalse(np.allclose(integrated_gradients_one_point, integrated_gradients_multiple_points, atol=self.tolerace))
         
 
 if __name__ == '__main__':

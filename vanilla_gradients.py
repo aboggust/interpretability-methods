@@ -16,12 +16,13 @@ class VanillaGradients(InterpretabilityMethod):
         """Compute vanilla gradient mask."""
         # Initialize gradient for the input
         input_batch.requires_grad_()
+        input_batch.retain_grad()
         if input_batch.grad is not None: # Zero out existing gradients
             input_batch.grad.data.zero_()
 
         # Compute the gradient of the input with respect to the target class
         output = self.model(input_batch)
-        if not target_classes:
+        if target_classes is None:
             target_classes = output.argmax(dim=1)
         score = torch.sum(output[torch.arange(output.shape[0]), target_classes])
         score.backward(retain_graph=True)

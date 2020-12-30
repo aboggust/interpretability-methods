@@ -56,8 +56,6 @@ class InterpretabilityMethod(ABC):
         for i in range(num_samples):
             noise = torch.empty(input_batch.shape).normal_(mean=0, std=std).to(self.device)
             noisy_input_batch = input_batch + noise
-            noisy_input_batch.requires_grad_()
-            noisy_input_batch.retain_grad()
             gradients = self.get_masks(noisy_input_batch, target_classes=target_classes)
             if magnitude:
                 total_gradients += (gradients * gradients)
