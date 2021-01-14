@@ -6,8 +6,10 @@ import torch
 import torchvision.models as models
 import unittest
 from unittest.mock import patch
+
 from vanilla_gradients import VanillaGradients
 from integrated_gradients import IntegratedGradients
+from util import normalize_0to1
 
 
 class TestInterpretabilityMethod(unittest.TestCase):
@@ -64,7 +66,6 @@ class TestInterpretabilityMethod(unittest.TestCase):
             self.assertFalse(np.allclose(smoothgrad_gradients_no_noise[1], smoothgrad_gradients_no_noise[2],
                                          atol=self.tolerace))
         
-
 class TestVanillaGradients(unittest.TestCase):
     
     def setUp(self):
@@ -170,7 +171,8 @@ class TestIntegratedGradients(unittest.TestCase):
         
     def test_get_masks_num_points(self):
         """Test number of points pararmeter."""
-        vanilla_gradients_equivalent = VanillaGradients(self.model).get_masks(self.input_batch) * self.input_batch.cpu().detach().numpy()
+        vanilla_gradients = VanillaGradients(self.model).get_masks(self.input_batch)
+        vanilla_gradients_equivalent = vanilla_gradients * normalize_0to1(self.input_batch.cpu().detach().numpy())
         integrated_gradients_multiple_points = self.integrated_gradients.get_masks(self.input_batch)
         
         # Integrated gradient with a 0 baseline and alphas = [1] is equal to vanilla gradients times the input.

@@ -6,6 +6,7 @@ import torch
 
 from interpretability_method import InterpretabilityMethod
 from vanilla_gradients import VanillaGradients
+from util import normalize_0to1
 
 
 class IntegratedGradients(InterpretabilityMethod):
@@ -33,6 +34,8 @@ class IntegratedGradients(InterpretabilityMethod):
             input_point = baseline + alpha * (input_batch - baseline)
             point_gradient = vanilla_gradients.get_masks(input_point, 
                                                          target_classes=target_classes)
+            assert np.min(point_gradient) >= 0 
             cumulative_gradients += point_gradient
-        integrated_gradients = cumulative_gradients * (input_batch.detach().cpu().numpy() - baseline.detach().cpu().numpy()) / num_points
+        normalized_input = normalize_0to1(input_batch.detach().cpu().numpy())
+        integrated_gradients = cumulative_gradients * (normalized_input - baseline.detach().cpu().numpy()) / num_points
         return integrated_gradients

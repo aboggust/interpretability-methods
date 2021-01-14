@@ -15,12 +15,17 @@ def visualize_masks(batch, percentile=99):
     Returns:
     None and outputs a matplotlib figure with batch greyscale images showing the clipped masks in the batch.
     """
+    masks = clip_masks(batch, percentile)
+    fig = _plot_greyscale(masks)
+    
+    
+def clip_masks(batch, percentile):
     batch_size = batch.shape[0]
-    masks = np.sum(np.abs(batch), axis=1)
+    masks = np.sum(batch, axis=1)
     vmax = np.percentile(masks, percentile, axis=(1,2)).reshape((batch_size, 1, 1))
     vmin = np.min(masks, axis=(1,2)).reshape((batch_size, 1, 1))
     masks = np.clip((masks - vmin) / (vmax - vmin), 0, 1)
-    fig = _plot_greyscale(masks)
+    return masks
 
 
 def _plot_greyscale(masks):
