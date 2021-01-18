@@ -3,7 +3,7 @@
 
 import torch
 import numpy as np
-from interpretability_method import InterpretabilityMethod
+from interpretability_methods.interpretability_method import InterpretabilityMethod
 
 
 class VanillaGradients(InterpretabilityMethod):

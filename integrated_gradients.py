@@ -4,9 +4,9 @@
 import numpy as np
 import torch
 
-from interpretability_method import InterpretabilityMethod
-from vanilla_gradients import VanillaGradients
-from util import normalize_0to1
+from interpretability_methods.interpretability_method import InterpretabilityMethod
+from interpretability_methods.vanilla_gradients import VanillaGradients
+from interpretability_methods.util import normalize_0to1
 
 
 class IntegratedGradients(InterpretabilityMethod):

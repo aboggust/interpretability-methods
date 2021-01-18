@@ -1,15 +1,19 @@
 # Tests for interpretability methods.
 
 import numpy as np
+import os
 import PIL.Image
 import torch
 import torchvision.models as models
 import unittest
 from unittest.mock import patch
 
-from vanilla_gradients import VanillaGradients
-from integrated_gradients import IntegratedGradients
-from util import normalize_0to1
+from interpretability_methods.vanilla_gradients import VanillaGradients
+from interpretability_methods.integrated_gradients import IntegratedGradients
+from interpretability_methods.util import normalize_0to1
+
+
+TEST_IMAGE = os.path.join(os.path.dirname(__file__), 'doberman.png')
 
 
 class TestInterpretabilityMethod(unittest.TestCase):
@@ -17,7 +21,7 @@ class TestInterpretabilityMethod(unittest.TestCase):
     def setUp(self):
         """Set up tests using Inception V3 and VanillaGradients instance."""
         model = models.__dict__['inception_v3'](pretrained=True).cuda().eval()
-        self.image = np.asarray(PIL.Image.open('./doberman.png')) / 127.5 - 1.0
+        self.image = np.asarray(PIL.Image.open(TEST_IMAGE)) / 127.5 - 1.0
         self.vanilla_gradients = VanillaGradients(model)
         self.tolerace = 1e-05
     
@@ -70,7 +74,7 @@ class TestVanillaGradients(unittest.TestCase):
     
     def setUp(self):
         model = models.__dict__['inception_v3'](pretrained=True).cuda().eval()
-        image = np.asarray(PIL.Image.open('./doberman.png')) / 127.5 - 1.0
+        image = np.asarray(PIL.Image.open(TEST_IMAGE)) / 127.5 - 1.0
         input_image = torch.from_numpy(image.transpose(2, 0, 1)).cuda().float()
         input_image_flipped = torch.from_numpy(np.flip(image.transpose(2, 0, 1), axis=1).copy()).cuda().float()
         self.input_batch = torch.stack([input_image, input_image_flipped])
@@ -122,7 +126,7 @@ class TestIntegratedGradients(unittest.TestCase):
     
     def setUp(self):
         self.model = models.__dict__['inception_v3'](pretrained=True).cuda().eval()
-        image = np.asarray(PIL.Image.open('./doberman.png')) / 127.5 - 1.0
+        image = np.asarray(PIL.Image.open(TEST_IMAGE)) / 127.5 - 1.0
         input_image = torch.from_numpy(image.transpose(2, 0, 1)).cuda().float()
         input_image_flipped = torch.from_numpy(np.flip(image.transpose(2, 0, 1), axis=1).copy()).cuda().float()
         self.input_batch = torch.stack([input_image, input_image_flipped])
