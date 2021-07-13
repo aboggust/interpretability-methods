@@ -1,21 +1,20 @@
 # Integrated gradients interpretability method class. 
-# Derived from original paper: https://arxiv.org/pdf/1703.01365.pdf
+# Original paper: https://arxiv.org/pdf/1703.01365.pdf
 
+import captum
 import numpy as np
 import torch
 
 from interpretability_methods.interpretability_method import InterpretabilityMethod
-from interpretability_methods.vanilla_gradients import VanillaGradients
-from interpretability_methods.util import normalize_0to1
-
 
 class IntegratedGradients(InterpretabilityMethod):
     
     def __init__(self, model):
         super().__init__(model)
+        self.ig_method = captum.attr.IntegratedGradients(self.model)
 
         
-    def get_masks(self, input_batch, target_classes=None, threshold=None, baseline=None, num_points=25):
+    def get_masks(self, input_batch, target_classes=None, baseline=None, num_points=50):
         """
         Compute integrated gradient mask.
         
@@ -30,17 +29,10 @@ class IntegratedGradients(InterpretabilityMethod):
         
         if target_classes is None: # compute each point with respect to the input's predicted class
             target_classes = self.model(input_batch).argmax(dim=1)
-        vanilla_gradients = VanillaGradients(self.model)
-        
-        cumulative_gradients = np.zeros(input_batch.shape)
-        for alpha in torch.linspace(0, 1, num_points):
-            input_point = baseline + alpha * (input_batch - baseline)
-            point_gradient = vanilla_gradients.get_masks(input_point, 
-                                                         target_classes=target_classes)
-            assert np.min(point_gradient) >= 0 
-            cumulative_gradients += point_gradient
-        normalized_input = normalize_0to1(input_batch.detach().cpu().numpy())
-        integrated_gradients = cumulative_gradients * (normalized_input - baseline.detach().cpu().numpy()) / num_points
-        if threshold is not None:
-            integrated_gradients = binarize_masks(integrated_gradients, threshold)
+            
+        integrated_gradients = self.ig_method.attribute(input_batch, 
+                                                        baselines=baseline, 
+                                                        target=target_classes,
+                                                        n_steps=num_points)
+        integrated_gradients = integrated_gradients.detach().cpu().numpy()
         return integrated_gradients

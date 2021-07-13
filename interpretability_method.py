@@ -18,7 +18,7 @@ class InterpretabilityMethod(ABC):
 
         
     @abstractmethod
-    def get_masks(self, input_batch, target_classes=None, threshold=None):
+    def get_masks(self, input_batch, target_classes=None):
         """
         Returns mask of activations for the given input.
         
@@ -27,8 +27,6 @@ class InterpretabilityMethod(ABC):
             interpretability method on.
         target_classes: None or list of integers indicating the target class for each input.
             If None, then the predicted classes are used as the target classes.
-        threshold: None or float between 0 and 1 inclusive. If not None, values will be thresholded
-            at that value creating a binary mask.
         
         Returns:
         A numpy array the same shape as the input_batch of interpretability activations with respect
