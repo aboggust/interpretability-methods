@@ -13,8 +13,9 @@ class IntegratedGradients(InterpretabilityMethod):
     
     def __init__(self, model):
         super().__init__(model)
-    
-    def get_masks(self, input_batch, target_classes=None, baseline=None, num_points=25):
+
+        
+    def get_masks(self, input_batch, target_classes=None, threshold=None, baseline=None, num_points=25):
         """
         Compute integrated gradient mask.
         
@@ -24,7 +25,9 @@ class IntegratedGradients(InterpretabilityMethod):
         num_points: integer number of points to integrate from the baseline to the input.
         """
         if baseline is None:
-            baseline = torch.zeros(input_batch.shape).to(self.device)
+            baseline = torch.randn(input_batch.shape)
+        baseline = baseline.to(self.device)
+        
         if target_classes is None: # compute each point with respect to the input's predicted class
             target_classes = self.model(input_batch).argmax(dim=1)
         vanilla_gradients = VanillaGradients(self.model)
@@ -38,4 +41,6 @@ class IntegratedGradients(InterpretabilityMethod):
             cumulative_gradients += point_gradient
         normalized_input = normalize_0to1(input_batch.detach().cpu().numpy())
         integrated_gradients = cumulative_gradients * (normalized_input - baseline.detach().cpu().numpy()) / num_points
+        if threshold is not None:
+            integrated_gradients = binarize_masks(integrated_gradients, threshold)
         return integrated_gradients

@@ -3,7 +3,9 @@
 
 import torch
 import numpy as np
+
 from interpretability_methods.interpretability_method import InterpretabilityMethod
+from interpretability_methods.util import binarize_masks
 
 
 class VanillaGradients(InterpretabilityMethod):
@@ -12,7 +14,7 @@ class VanillaGradients(InterpretabilityMethod):
         super().__init__(model)
         
     
-    def get_masks(self, input_batch, target_classes=None):
+    def get_masks(self, input_batch, target_classes=None, threshold=None):
         """Compute vanilla gradient mask using the magnitude of the gradients."""
         # Initialize gradient for the input
         input_batch.requires_grad_()
@@ -27,5 +29,8 @@ class VanillaGradients(InterpretabilityMethod):
         score = torch.sum(output[torch.arange(output.shape[0]), target_classes])
         score.backward(retain_graph=True)
         vanilla_gradients = input_batch.grad.data
-        return np.abs(vanilla_gradients.cpu().detach().numpy())
-    
+        
+        vanilla_gradients = np.abs(vanilla_gradients.cpu().detach().numpy())
+        if threshold is not None:
+            vanilla_gradients = binarize_masks(vanilla_gradients, threshold)
+        return np.abs(vanilla_gradients)

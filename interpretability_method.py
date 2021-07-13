@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 
+from interpretability_methods.util import binarize_masks
+
 
 class InterpretabilityMethod(ABC):
     """Base class for all interpretability methods."""
@@ -12,11 +14,11 @@ class InterpretabilityMethod(ABC):
         """ TODO """
         self.model = model
         self.model.eval()
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    
+        
     @abstractmethod
-    def get_masks(self, input_batch, target_classes=None):
+    def get_masks(self, input_batch, target_classes=None, threshold=None):
         """
         Returns mask of activations for the given input.
         
@@ -25,6 +27,8 @@ class InterpretabilityMethod(ABC):
             interpretability method on.
         target_classes: None or list of integers indicating the target class for each input.
             If None, then the predicted classes are used as the target classes.
+        threshold: None or float between 0 and 1 inclusive. If not None, values will be thresholded
+            at that value creating a binary mask.
         
         Returns:
         A numpy array the same shape as the input_batch of interpretability activations with respect
@@ -33,7 +37,7 @@ class InterpretabilityMethod(ABC):
         pass
     
     
-    def get_smoothgrad_masks(self, input_batch, target_classes=None, std_spread=.15, num_samples=25, magnitude=True):
+    def get_smoothgrad_masks(self, input_batch, target_classes=None, threshold=None, std_spread=.15, num_samples=25, magnitude=True):
         """
         Returns a mask of smoothgrad activations for the given input.
         
@@ -42,6 +46,8 @@ class InterpretabilityMethod(ABC):
             interpretability method on.
         target_classes: None or list of integers indicating the target class for each input.
             If None, then the predicted classes are used as the target classes.
+        threshold: None or float between 0 and 1 inclusive. If not None, values will be thresholded
+            at that value creating a binary mask.
         std_spread: amount of noise to add to the input, as fraction of the total spread.
         num_samples: number of samples to average across to get the smooth gradient.
         magnitude: boolean representing whether to compute sum of squares.
@@ -61,4 +67,7 @@ class InterpretabilityMethod(ABC):
                 total_gradients += (gradients * gradients)
             else:
                 total_gradients += gradients
-        return total_gradients / num_samples
+        output = total_gradients / num_samples
+        if threshold is not None:
+            output = binarize_masks(output)
+        return output
