@@ -19,7 +19,6 @@ class KernelSHAP(InterpretabilityMethod):
     
     def get_masks(self, input_batch, target_classes=None, baseline=None, n_samples=50):
         """Compute SHAP mask."""
-        print('Getting Kernal SHAP masks')
         if input_batch.shape[0] > 1:
             raise ValueError('Batched computation not possible for Kernel SHAP')
         
