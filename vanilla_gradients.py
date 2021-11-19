@@ -15,13 +15,13 @@ class VanillaGradients(InterpretabilityMethod):
         self.vg_method = captum.attr.Saliency(model)
         
     
-    def get_masks(self, input_batch, target_classes=None):
+    def get_masks(self, input_batch, target_classes=None, absolute=True):
         """Compute vanilla gradient mask using the magnitude of the gradients."""
         if target_classes is None:
             target_classes = self.model(input_batch).argmax(dim=1)
 
         vanilla_gradients = self.vg_method.attribute(input_batch, 
                                                      target=target_classes, 
-                                                     abs=True)
+                                                     abs=absolute)
         vanilla_gradients = vanilla_gradients.detach().cpu().numpy()
         return vanilla_gradients
