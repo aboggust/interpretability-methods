@@ -17,12 +17,13 @@ class LIME(InterpretabilityMethod):
         self.to_tensor_transform = to_tensor_transform
     
     def get_masks(self, input_batch, target_classes=None, threshold=None, num_samples=1000, positive_only=True):
-        batch_size, _, height, width = input_batch.shape
+        batch_size, num_channels, height, width = input_batch.shape
+        self.num_channels = num_channels
         masks = np.empty((batch_size, 1, height, width))
         top_labels = 1
         if target_classes is not None:
             top_labels = None
-        
+
         input_batch = input_batch.detach().cpu()
         for i, instance in enumerate(input_batch):
             labels = None
@@ -47,6 +48,8 @@ class LIME(InterpretabilityMethod):
         """Batch predict function required by LIME."""
         self.model = self.model.to(self.device)
         input_batch = torch.stack(tuple(self.to_tensor_transform(i) for i in input_batch), dim=0)
+        if self.num_channels == 1:
+            input_batch = input_batch[:, 0:1, :, :]
         input_batch = input_batch.to(self.device)
         output = self.model(input_batch)
         probabilities = F.softmax(output, dim=1)
