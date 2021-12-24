@@ -30,11 +30,11 @@ class XRAI(InterpretabilityMethod):
             return {saliency.base.INPUT_OUTPUT_GRADIENTS: gradients}
 
         xrais = []
-        for single_input in input_batch:
+        for i, single_input in enumerate(input_batch):
             single_input = single_input.detach().cpu().numpy()
             single_input = single_input.transpose(1, 2, 0) # XRAI takes channel last
             xrai = self.method.GetMask(single_input, call_model_function, 
-                                       {'target_classes': target_classes})
+                                       {'target_classes': target_classes[i]})
             xrai = np.expand_dims(xrai, axis=0)
             xrais.append(xrai)
         return np.array(xrais)
