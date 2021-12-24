@@ -21,11 +21,15 @@ class RISE(InterpretabilityMethod):
     def get_masks(self, input_batch, target_classes=None):
         """Compute RISE attributions."""        
         if target_classes is None:
-            target_classes = self.model(input_batch).argmax(dim=1)
+            target_classes = self.model(input_batch).argmax(dim=1).cpu().numpy()
         
-        rise_masks = self.method(input_batch).cpu().numpy()
-        rise_masks = rise_masks[target_classes]
-        if len(target_classes) == 1:
-            rise_masks = np.expand_dims(rise_masks, axis=0)
-        rise_masks = np.expand_dims(rise_masks, axis=1)
+        rise_masks = []
+        for i, single_input in enumerate(input_batch):
+            rise_mask = self.method(single_input.unsqueeze(0)).cpu().numpy()
+            rise_mask = rise_mask[target_classes[i]]
+            if len(target_classes) == 1:
+                rise_mask = np.expand_dims(rise_mask, axis=0)            
+            rise_masks.append(rise_mask)
+            
+        rise_masks = np.expand_dims(np.array(rise_masks), axis=1)
         return rise_masks
