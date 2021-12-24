@@ -5,6 +5,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+import torchvision.transforms as transforms
+from PIL import Image
+
 from interpretability_methods.interpretability_method import InterpretabilityMethod
 
 
@@ -15,7 +18,8 @@ class LIME(InterpretabilityMethod):
         self.explainer = lime_image.LimeImageExplainer()
         self.to_pil_transform = to_pil_transform
         self.to_tensor_transform = to_tensor_transform
-    
+
+
     def get_masks(self, input_batch, target_classes=None, threshold=None, num_samples=1000, positive_only=True):
         batch_size, num_channels, height, width = input_batch.shape
         self.num_channels = num_channels
@@ -29,21 +33,23 @@ class LIME(InterpretabilityMethod):
             labels = None
             if target_classes is not None:
                 labels = [target_classes[i]]
-            explanation = self.explainer.explain_instance(np.array(self.to_pil_transform(instance)),
-                                                          self._batch_predict,
-                                                          labels=labels,
-                                                          top_labels=top_labels,
-                                                          hide_color=0,
-                                                          num_samples=num_samples,
-                                                          num_features=np.prod(instance.shape))
+            explanation = self.explainer.explain_instance(
+                np.array(self.to_pil_transform(instance)),
+                self._batch_predict,
+                labels=labels,
+                top_labels=top_labels,
+                hide_color=0,
+                num_samples=num_samples,
+#                 num_features=np.prod(instance.shape)
+            )
             if labels is None:
                 label = explanation.top_labels[0]
             else:
                 label = labels[0]
             masks[i] = self._get_map(explanation, label, positive_only=positive_only)
         return masks
-                       
-        
+
+
     def _batch_predict(self, input_batch):
         """Batch predict function required by LIME."""
         self.model = self.model.to(self.device)
@@ -54,8 +60,8 @@ class LIME(InterpretabilityMethod):
         output = self.model(input_batch)
         probabilities = F.softmax(output, dim=1)
         return probabilities.detach().cpu().numpy()
-    
-    
+
+
     def _get_map(self, explanation, label, positive_only=True):
         """Use LIME explanation internals to get saliency map as opposed to mask."""
         segments = explanation.segments
@@ -66,4 +72,4 @@ class LIME(InterpretabilityMethod):
                 saliency = max(saliency, 0)
             mask[segments == feature] = saliency
         return np.expand_dims(mask, axis=0)
-        
+
