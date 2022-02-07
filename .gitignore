@@ -3,6 +3,3 @@ __pycache__/
 
 # Jupyter Notebooks
 .ipynb_checkpoints
-
-# Imported Code
-rise_master/
