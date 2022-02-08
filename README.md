@@ -32,11 +32,15 @@ See [notebook](https://github.mit.edu/aboggust/interpretability_methods/blob/mas
 
 Each interpretability method (i.e., `VanillaGradients`) extends the base class `InterpretabilityMethod`. Each method is instantiated with a model and potentially other method specific parameters. An `InterpretabilityMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. `get_saliency` takes in an input batch (i.e., a batch of images) and outputs an `np.array` of the same size that represents the attributions. `get_saliency_smoothed` applies SmoothGrad to the `get_saliency` attributions.
 
+Once saliency is computed, `util.py` contains code to visualize the attributions.
+
 Usage example:
 ```
 from interpretability_methods.vanilla_gradients import VanillaGradients
+from interpretability_methods.util import visualize_gradients
 model = ... # assuming pytorch model 
 input_batch = ... # assumping 4D input batch (batch, channels, height, width)
 vanilla_gradients_method = VanillaGradients(model)
 vanilla_gradients = vanilla_gradients_method(input_batch)
+visualize_saliency(vanilla_gradients) # will output greyscale saliency image
 ```
