@@ -1,5 +1,4 @@
 captum==0.4.0
-interpretability_methods.egg==info
 matplotlib==3.3.2
 numpy==1.17.4
 Pillow==9.0.1
