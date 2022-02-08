@@ -30,17 +30,23 @@ Install the method locally for use in other development projects. It can be refe
 ### Step 4: Produce saliency.
 See [notebook](https://github.mit.edu/aboggust/interpretability_methods/blob/master/examples/interpretability_examples.ipynb) for examples.
 
-Each interpretability method (i.e., `VanillaGradients`) extends the base class `InterpretabilityMethod`. Each method is instantiated with a model and potentially other method specific parameters. An `InterpretabilityMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. `get_saliency` takes in an input batch (i.e., a batch of images) and outputs an `np.array` of the same size that represents the attributions. `get_saliency_smoothed` applies SmoothGrad to the `get_saliency` attributions.
+Each interpretability method (i.e., `VanillaGradients`) extends the base class `InterpretabilityMethod`. Each method is instantiated with a model and, optionally, other method specific parameters. An `InterpretabilityMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. 
 
-Once saliency is computed, `util.py` contains code to visualize the attributions.
+`get_saliency` takes in an `input_batch` (e.g., a batch of images) and outputs an `np.array` of the same size that represents the attributions. It defaults to computing the saliency with respect the the model's predicted class, but `target_classes` can optionally be passed to specify a specific class. `target_classes` is a list of integers the same length as the batch size. `target_class[i]` is the index of the class to compute saliency with respect to for `input_batch[i]`.
+
+`get_saliency_smoothed` applies SmoothGrad to the `get_saliency` attributions.
+
+Once saliency is computed, [`util.py`](https://github.mit.edu/aboggust/interpretability_methods/blob/master/util.py) contains code to visualize the attributions.
 
 Usage example:
 ```
+# Getting Vanilla Gradients with respect to the predicted class.
 from interpretability_methods.vanilla_gradients import VanillaGradients
-from interpretability_methods.util import visualize_gradients
+from interpretability_methods.util import visualize_saliency
+
 model = ... # assuming pytorch model 
 input_batch = ... # assumping 4D input batch (batch, channels, height, width)
 vanilla_gradients_method = VanillaGradients(model)
-vanilla_gradients = vanilla_gradients_method(input_batch)
+vanilla_gradients = vanilla_gradients_method(input_batch) # attributions of shape (batch, channels, height, width)
 visualize_saliency(vanilla_gradients) # will output greyscale saliency image
 ```
