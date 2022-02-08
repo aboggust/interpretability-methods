@@ -15,19 +15,15 @@ Current methods that are implemented:
 Each method performs batched computation and can be computed with and without SmoothGrad. The methods are implemented using [Captum](https://captum.ai/) and puplic repostiories (i.e., [LIME](https://github.com/marcotcr/lime)) and are largley inspired by the [Google Pair Saliency implementation](https://github.com/PAIR-code/saliency).
 
 ## Usage
-### Step 1: Clone or download the repo.
+### Step 1: Install interpretability_methods.
+Install the method locally for use in other development projects. It can be referenced as `interpretability_methods` within this package and in other locations.  
+```pip install git+https://github.com/aboggust/interpretability-methods.git```
 
 ### Step 2: Install the requirements.
-Requirements are listed in [`requirements.txt`](https://github.mit.edu/aboggust/interpretability_methods/blob/master/requirements.txt). Install via:
-
+Requirements are listed in [`requirements.txt`](https://github.mit.edu/aboggust/interpretability_methods/blob/master/requirements.txt). Install via:  
 ```pip install -r requirements.txt```
 
-### Step 3: Locally install.
-Install the method locally for use in other development projects. It can be referenced as `interpretability_methods` within this package and in other locations.
-
-```pip install -e /path/to/interpretability_methods```
-
-### Step 4: Produce saliency.
+### Step 3: Produce saliency.
 See [notebook](https://github.mit.edu/aboggust/interpretability_methods/blob/master/examples/interpretability_examples.ipynb) for examples.
 
 Each interpretability method (i.e., `VanillaGradients`) extends the base class `InterpretabilityMethod`. Each method is instantiated with a model and, optionally, other method specific parameters. An `InterpretabilityMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. 
