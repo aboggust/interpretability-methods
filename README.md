@@ -8,31 +8,29 @@ Current methods that are implemented:
 * **SmoothGrad** ([paper](https://arxiv.org/abs/1706.03825.pdf) | adapted from [Google Pair Saliency](https://github.com/PAIR-code/saliency))
 * **Guided Backprop** ([paper](https://arxiv.org/pdf/1412.6806.pdf) | implemented via [Captum](https://captum.ai/api/guided_backprop.html))
 * **GradCAM** ([paper](https://arxiv.org/pdf/1610.02391.pdf) | implemented via [Captum](https://captum.ai/api/layer.html#gradcam))
-* **Guided GradCAM** ([paper](https://arxiv.org/pdf/1610.02391.pdf) | implemented via [Captum](https://captum.ai/api/guided_grad_cam.html))
+* **Gradient SHAP** ([paper](https://arxiv.org/pdf/1705.07874.pdf) | implemented via [Captum](https://captum.ai/api/gradient_shap.html))
+* **Kernel SHAP** ([paper](https://arxiv.org/pdf/1705.07874.pdf) | implemented via [Captum](https://captum.ai/api/kernel_shap.html))
+* **RISE** ([paper](https://arxiv.org/pdf/1806.07421.pdf) | implemented via [the authors' GitHub](https://github.com/eclique/RISE))
 * **XRAI** ([paper](https://arxiv.org/pdf/1906.02825.pdf) | adapted from [Google Pair Saliency](https://github.com/PAIR-code/saliency))
-* **LIME** ([paper](https://arxiv.org/pdf/1602.04938.pdf) | implemented via the [author's repo](https://github.com/marcotcr/lime))
+* **LIME** ([paper](https://arxiv.org/pdf/1602.04938.pdf) | implemented via the [authors' GitHub](https://github.com/marcotcr/lime))
+* **SIS** ([paper 1](https://arxiv.org/pdf/1810.03805.pdf) | [paper 2](https://arxiv.org/pdf/2003.08907.pdf) | implemented via the [authors' GitHub](https://github.com/gifford-lab/overinterpretation))
 
 Each method performs batched computation and can be computed with and without SmoothGrad. The methods are implemented using [Captum](https://captum.ai/) and puplic repostiories (i.e., [LIME](https://github.com/marcotcr/lime)) and are largley inspired by the [Google Pair Saliency implementation](https://github.com/PAIR-code/saliency).
 
+## Set Up
+Clone this repository. Then
+```
+# Install the requirements
+pip install -r requirements.txt
+
+# Install the package locally
+pip install -e /path/to/interpretability_methods
+```
+
 ## Usage
-### Step 1: Install interpretability_methods.
-Install the method locally for use in other development projects. It can be referenced as `interpretability_methods` within this package and in other locations.  
-```pip install git+https://github.com/aboggust/interpretability-methods.git```
-
-### Step 2: Install the requirements.
-Requirements are listed in [`requirements.txt`](https://github.mit.edu/aboggust/interpretability_methods/blob/master/requirements.txt). Install via:  
-```pip install -r requirements.txt```
-
-### Step 3: Produce saliency.
 See [notebook](https://github.mit.edu/aboggust/interpretability_methods/blob/master/examples/interpretability_examples.ipynb) for examples.
 
-Each interpretability method (i.e., `VanillaGradients`) extends the base class `InterpretabilityMethod`. Each method is instantiated with a model and, optionally, other method specific parameters. An `InterpretabilityMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. 
-
-`get_saliency` takes in an `input_batch` (e.g., a batch of images) and outputs an `np.array` of the same size that represents the attributions. It defaults to computing the saliency with respect the the model's predicted class, but `target_classes` can optionally be passed to specify a specific class. `target_classes` is a list of integers the same length as the batch size. `target_class[i]` is the index of the class to compute saliency with respect to for `input_batch[i]`.
-
-`get_saliency_smoothed` applies SmoothGrad to the `get_saliency` attributions.
-
-Once saliency is computed, [`util.py`](https://github.mit.edu/aboggust/interpretability_methods/blob/master/util.py) contains code to visualize the attributions.
+Each saliency method (i.e., `VanillaGradients`) extends the base class `SaliencyMethod`. Each method is instantiated with a model and, optionally, other method specific parameters. An `SaliencyMethod` object has two public methods: `get_saliency` and `get_saliency_smoothed`. 
 
 Usage example:
 ```
