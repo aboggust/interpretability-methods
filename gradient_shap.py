@@ -6,35 +6,36 @@ Original paper: https://arxiv.org/pdf/1705.07874.pdf
 import captum
 import torch
 
-from interpretability_methods.interpretability_method import InterpretabilityMethod
+from .saliency_method import SaliencyMethod
 
 
-class GradientSHAP(InterpretabilityMethod):
-    """Gradient SHAP interpretability method."""
+class GradientSHAP(SaliencyMethod):
+    """Gradient SHAP saliency method."""
 
     def __init__(self, model):
-        """Extends base method to include the saliency method."""
+        """Extends base method to include Gradient SHAP."""
         super().__init__(model)
         self.method = captum.attr.GradientShap(model)
 
-    def get_saliency(self, input_batch, target_classes=None, baseline=None,
+    def get_saliency(self, input_batch, target_classes=None, baselines=None,
                      num_samples=5):
         """
-        Extends base method to compute Gradient SHAP.
+        Extends base method to compute Gradient SHAP attributions.
 
         Additional Args:
-        baseline: None or torch Tensor of the same shape of the input_batch.
-        num_samples: integer number of times to add white noise to the input.
+        baselines (None or torch Tensor): The baslines used to compute attributions.
+            If None, uses a the all zero and all ones baselines.
+        num_samples (int): Number of noisy inputs to compute.
         """
         if target_classes is None:
             target_classes = self.model(input_batch).argmax(dim=1)
 
-        if baseline is None:
-            baseline = torch.cat([input_batch * 0, input_batch * 1])
-        baseline = baseline.to(self.device)
+        if baselines is None:
+            baselines = torch.cat([input_batch * 0, input_batch * 1])
+        baselines = baselines.to(self.device)
 
         shap = self.method.attribute(input_batch,
-                                     baselines=baseline,
+                                     baselines=baselines,
                                      target=target_classes,
                                      n_samples=num_samples)
         shap = shap.detach().cpu().numpy()

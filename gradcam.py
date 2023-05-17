@@ -3,20 +3,21 @@ GradCAM interpretability method class.
 Original paper: https://arxiv.org/pdf/1610.02391.pdf
 """
 
-import captum
+import captum.attr
 
-from interpretability_methods.interpretability_method import InterpretabilityMethod
+from .saliency_method import SaliencyMethod
 
 
-class GradCAM(InterpretabilityMethod):
-    """GradCAM interpretability method."""
+class GradCAM(SaliencyMethod):
+    """GradCAM saliency method."""
 
     def __init__(self, model, layer):
         """
-        Extends base method to include the saliency method.
+        Extends base method to include GradCAM.
 
         Additional Args:
-        layer: the layer of the model to compute GradCAM with.
+        layer: The layer of the model to compute GradCAM with. 
+            Must be a convolutional layer.
         """
         super().__init__(model)
         self.method = captum.attr.LayerGradCam(model, layer)
@@ -24,12 +25,12 @@ class GradCAM(InterpretabilityMethod):
     def get_saliency(self, input_batch, target_classes=None,
                      interpolation_method='bilinear'):
         """
-        Extends base method to compute GradCAM.
+        Extends base method to compute the GradCAM attributions.
 
         Additional Args:
-        interpolation_method: method to upsample the GradCAM attributions. Can
-            be "nearest", "area", "bilinear", or "bicubic". Defaults to
-            "bilinear".
+        interpolation_method (str): method to upsample the GradCAM attributions.
+            Can be 'nearest', 'area', 'bilinear', or 'bicubic'. Defaults to
+            'bilinear'.
         """
         if target_classes is None:
             target_classes = self.model(input_batch).argmax(dim=1)

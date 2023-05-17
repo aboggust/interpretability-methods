@@ -4,24 +4,24 @@ Adapted from Google PAIR: https://github.com/PAIR-code/saliency
 Original paper: https://arxiv.org/abs/1906.02825
 """
 
+import numpy as np
 import saliency.core as saliency
 import torch
-import numpy as np
 
-from interpretability_methods.interpretability_method import InterpretabilityMethod
-from interpretability_methods.vanilla_gradients import VanillaGradients
+from .saliency_method import SaliencyMethod
+from .vanilla_gradients import VanillaGradients
 
 
-class XRAI(InterpretabilityMethod):
-    """XRAI interpretability method."""
+class XRAI(SaliencyMethod):
+    """XRAI saliency method."""
 
     def __init__(self, model):
-        """Extends base method to include the saliency method."""
+        """Extends base method to include XRAI."""
         super().__init__(model)
         self.method = saliency.XRAI()
 
     def get_saliency(self, input_batch, target_classes=None):
-        """Extends base method to compute XRAI saliency."""
+        """Extends base method to compute XRAI attributions."""
         if target_classes is None:
             target_classes = self.model(input_batch).argmax(dim=1)
 

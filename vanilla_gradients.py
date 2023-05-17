@@ -8,14 +8,14 @@ https://arxiv.org/pdf/1312.6034.pdf
 
 import captum.attr
 
-from interpretability_methods.interpretability_method import InterpretabilityMethod
+from .saliency_method import SaliencyMethod
 
 
-class VanillaGradients(InterpretabilityMethod):
-    """Vanilla Gradients interpretability method."""
+class VanillaGradients(SaliencyMethod):
+    """Vanilla Gradients saliency method."""
 
     def __init__(self, model):
-        """Extends base method to include the saliency method."""
+        """Extends base method to include vanilla gradients."""
         super().__init__(model)
         self.method = captum.attr.Saliency(model)
 

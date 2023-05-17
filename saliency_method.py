@@ -1,21 +1,25 @@
-"""Parent class for all interpretability methods."""
+"""
+Parent class for all saliency methods.
+"""
 
 from abc import ABC, abstractmethod
 import numpy as np
 import torch
 
 
-class InterpretabilityMethod(ABC):
-    """Base class for all interpretability methods."""
+class SaliencyMethod(ABC):
+    """Base class for all saliency methods."""
 
     def __init__(self, model):
-        """ Initialize method with model in eval mode and device.
+        """Initializes the method with a model and device.
 
         Args:
-        model: pytorch model to run saliency method on.
+        model (PyTorch or SkLearnmodel): The model to compute saliency with.
         """
         self.model = model
-        self.model.eval()
+        try: # put pytorch models in eval mode
+            self.model.eval()
+        except: pass # ignore for sklearn-based models
         self.device = torch.device("cuda" if torch.cuda.is_available()
                                    else "cpu")
 
@@ -25,11 +29,11 @@ class InterpretabilityMethod(ABC):
         Returns activations for the given input. Implemented in subclasses.
 
         Args:
-        input_batch: inputs as torch array of dimensions
-            (batch, channel, height, width) to run interpretability method on.
-        target_classes: None or list of integers indicating the target class for
-            each input. If None, then the predicted classes are used as the
-            target classes.
+        input_batch (torch Tensor): The inputs batch with dimensions
+            (batch, channel, height, width) to run the saliency method on.
+        target_classes (None or int array): None or list of integers 
+            indicating the target class for each input. If None, then the 
+            predicted classes are used as the target classes.
 
         Returns:
         A numpy array the same shape as the input_batch of interpretability
@@ -44,16 +48,15 @@ class InterpretabilityMethod(ABC):
         Returns SmoothGrad activations for the given input.
 
         Args:
-        input_batch: inputs as torch array of dimensions
-            (batch, channel, height, width) to run interpretability method on.
-        target_classes: None or list of integers indicating the target class for
-            each input. If None, then the predicted classes are used as the
-            target classes.
-        std_spread: number representing the amount of noise to add to the input
-            as fraction of the total spread.
-        num_samples: number of samples to average across to get the smoothed
-            gradient.
-        magnitude: boolean representing whether to compute sum of squares.
+        input_batch (torch Tensor): The inputs batch with dimensions
+            (batch, channel, height, width) to run the saliency method on.
+        target_classes (None or int array): None or list of integers 
+            indicating the target class for each input. If None, then the 
+            predicted classes are used as the target classes.
+        std_spread (float): The amount of noise to add to the input as a
+            fraction of the total spread.
+        num_samples (int): The number of samples to average across.
+        magnitude (bool): Whether to compute sum of squares.
 
         Returns:
         A numpy array the same shape as input_batch of SmoothGrad
